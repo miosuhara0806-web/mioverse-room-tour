@@ -32,7 +32,30 @@
     } else if (result.totalClears >= 1) {
       result.pendingUnlockEvents = [...new Set([...result.pendingUnlockEvents, unlockId])];
     }
+    result.currentRun = validateRun(raw.currentRun, result.unlockedRooms);
     return result;
+  }
+  // 履歴・回数・日時が矛盾する途中データだけを破棄し、永続実績は保持する。
+  function validateRun(run, unlockedRooms) {
+    if (!run || run.version !== 1 || !Array.isArray(run.visitHistory) || !run.visitCounts || !run.currentStatus) return null;
+    const rooms = data.rooms.filter((room) => room.conversation);
+    const history = run.visitHistory;
+    if (history.length > 15 || history.some((id) => !rooms.some((r) => r.id === id && (r.available || unlockedRooms.includes(id))))) return null;
+    const counts = Object.fromEntries(rooms.map((r) => [r.id, history.filter((id) => id === r.id).length]));
+    if (rooms.some((r) => run.visitCounts[r.id] !== counts[r.id])) return null;
+    const confirmed = run.confirmedVisit;
+    if (confirmed !== null) {
+      if (!confirmed || history.length === 0 || confirmed.roomId !== history[history.length - 1]) return null;
+      const room = rooms.find((r) => r.id === confirmed.roomId);
+      const visit = room.conversation.visits.filter((v) => v.fromVisit <= counts[room.id]).at(-1);
+      if (!visit?.choices.some((c) => c.id === confirmed.choiceId)) return null;
+    }
+    const slot = history.length - (confirmed ? 1 : 0);
+    if (slot < 0 || slot >= 15) return null;
+    const status = { day: Math.floor(slot / 3) + 1, timeLabel: ["朝", "昼", "夜"][slot % 3], remainingVisits: 15 - history.length };
+    if (Object.keys(status).some((key) => run.currentStatus[key] !== status[key])) return null;
+    return { version: 1, currentStatus: status, visitCounts: counts, visitHistory: [...history],
+      confirmedVisit: confirmed ? { roomId: confirmed.roomId, choiceId: confirmed.choiceId } : null };
   }
   function storageUnavailable() {
     byId("save-notice").textContent = "このブラウザでは保存できません。現在の画面では遊べますが、クリア記録と解放状態は再読み込みで失われる場合があります。";
@@ -109,13 +132,32 @@
   function initialVisitCounts() {
     return Object.fromEntries(data.rooms.filter((room) => room.conversation).map((room) => [room.id, 0]));
   }
-  // 訪問回数は返答を確定した回数。保存せず、再読み込みで初期化する。
+  // 訪問回数は返答を確定した回数。未確定の入室は保存しない。
   const state = {
     screen: "title", room: null, answered: false, guideSeen: false,
     currentStatus: { ...data.initialStatus }, visitCounts: initialVisitCounts(), activeVisit: null,
-    visitHistory: [], endingResult: null, clearRegistered: false
+    visitHistory: [], endingResult: null, clearRegistered: false, confirmedVisit: null
   };
   const screens = ["title", "guide", "map", "conversation", "finish", "secretary", "unlock", "art-unlock", "stage-unlock", "aoi-route", "aoi-discovery", "memories", "memory-reading"];
+  function saveRun() {
+    save.currentRun = { version: 1, currentStatus: { ...state.currentStatus },
+      visitCounts: { ...state.visitCounts }, visitHistory: [...state.visitHistory],
+      confirmedVisit: state.confirmedVisit ? { ...state.confirmedVisit } : null };
+    persistSave();
+  }
+  function resumeRun() {
+    const run = save.currentRun;
+    state.currentStatus = { ...run.currentStatus };
+    state.visitCounts = { ...run.visitCounts };
+    state.visitHistory = [...run.visitHistory];
+    state.confirmedVisit = run.confirmedVisit ? { ...run.confirmedVisit } : null;
+    state.guideSeen = true;
+    renderStatus();
+    showScreen("map");
+    // 返答確定直後は反応と締めを復元し、15回目も最後まで読めるようにする。
+    if (state.confirmedVisit) enterRoom(data.rooms.find((r) => r.id === state.confirmedVisit.roomId), state.confirmedVisit);
+  }
+  byId("start-button").textContent = save.currentRun ? "つづきから" : "はじめる";
   const timeLabels = ["朝", "昼", "夜"];
   const endingRooms = data.rooms.filter((room) => ["partner", "lounge", "shelter", "recovery", "secretary", "art", "stage", "aoi"].includes(room.id));
   function selectEndingRoom(visitCounts, visitHistory) {
@@ -134,6 +176,7 @@
     state.clearRegistered = true;
     save.totalClears += 1;
     save.completedEndings = [...new Set([...save.completedEndings, endingId])];
+    save.currentRun = null;
     reconcileUnlockEvents();
     persistSave();
   }
@@ -259,16 +302,17 @@
     showScreen("map");
     if (roomId) byId(`room-${roomId}`).focus({ preventScroll: true });
   }
-  function enterRoom(room) {
+  function enterRoom(room, confirmed = null) {
     const canEnter = ["secretary", "art", "stage", "aoi"].includes(room.id) ? save.unlockedRooms.includes(room.id) : room.available;
-    if (!canEnter || state.screen !== "map" || state.currentStatus.remainingVisits <= 0) return;
+    if (!canEnter || state.screen !== "map" || (!confirmed && state.currentStatus.remainingVisits <= 0)) return;
     state.room = room;
     // 入室ごとの識別子。取り消した会話の古いボタンによる確定も防ぐ。
     const activeVisit = {};
     state.activeVisit = activeVisit;
     state.answered = false;
     const conversation = room.conversation;
-    const nextVisit = (state.visitCounts[room.id] ?? 0) + 1;
+    const nextVisit = (state.visitCounts[room.id] ?? 0) + (confirmed ? 0 : 1);
+    let restoredButton = null;
     // fromVisit の大きい適用段階を選ぶ。4回目以降は常連会話を使用。
     const visit = conversation?.visits.reduce((selected, candidate) => {
       return candidate.fromVisit <= nextVisit && (!selected || candidate.fromVisit > selected.fromVisit)
@@ -293,11 +337,15 @@
       button.type = "button";
       button.textContent = choice.label;
       button.addEventListener("click", () => {
-        if (state.answered || state.screen !== "conversation" || state.activeVisit !== activeVisit || state.currentStatus.remainingVisits <= 0) return;
+        if (state.answered || state.screen !== "conversation" || state.activeVisit !== activeVisit || (!confirmed && state.currentStatus.remainingVisits <= 0)) return;
         state.answered = true;
-        state.visitCounts[room.id] = nextVisit;
-        state.visitHistory.push(room.id);
-        state.currentStatus.remainingVisits -= 1;
+        if (!confirmed) {
+          state.visitCounts[room.id] = nextVisit;
+          state.visitHistory.push(room.id);
+          state.currentStatus.remainingVisits -= 1;
+          state.confirmedVisit = { roomId: room.id, choiceId: choice.id };
+          saveRun();
+        }
         // 日数・時間帯は、反応と締めを読んで次へ進むまで保持する。
         renderStatus();
         byId("reaction").textContent = [choice.reaction, visit?.closing].filter(Boolean).join("\n\n");
@@ -312,8 +360,10 @@
         byId("reaction").scrollIntoView({ block: "start" });
       });
       byId("choices").append(button);
+      if (confirmed?.choiceId === choice.id) restoredButton = button;
     });
     showScreen("conversation");
+    if (restoredButton) restoredButton.click();
   }
   function renderStatus() {
     byId("status").replaceChildren();
@@ -423,7 +473,8 @@
   }
   byId("start-button").addEventListener("click", () => {
     if (state.screen !== "title") return;
-    if (!showNextUnlockEvent()) showScreen(state.guideSeen ? "map" : "guide");
+    if (save.currentRun) { resumeRun(); return; }
+    if (!showNextUnlockEvent()) { saveRun(); showScreen(state.guideSeen ? "map" : "guide"); }
   });
   byId("guide-next").addEventListener("click", () => { state.guideSeen = true; showScreen("map"); });
   byId("cancel-button").addEventListener("click", () => {
@@ -444,6 +495,8 @@
     const nextTime = timeLabels.indexOf(state.currentStatus.timeLabel) + 1;
     if (nextTime === timeLabels.length) state.currentStatus.day += 1;
     state.currentStatus.timeLabel = timeLabels[nextTime % timeLabels.length];
+    state.confirmedVisit = null;
+    saveRun();
     renderStatus();
     returnToMap();
   });
@@ -451,6 +504,7 @@
     state.currentStatus = { ...data.initialStatus };
     state.visitCounts = initialVisitCounts();
     state.clearRegistered = false;
+    state.confirmedVisit = null;
     state.visitHistory = [];
     state.endingResult = null;
     byId("ending-body").replaceChildren();
@@ -471,6 +525,7 @@
     byId("cancel-button").hidden = false;
     byId("next-button").hidden = true;
     byId("next-button").textContent = "次の時間へ →";
+    saveRun();
     renderStatus();
     showScreen("map");
   }
