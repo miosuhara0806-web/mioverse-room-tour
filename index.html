@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MioVerse Room Tour</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="data.js" defer></script>
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <p id="save-notice" class="notice" role="status" hidden></p>
+    <header class="brand"><span class="brand-mark" aria-hidden="true">M</span><span>MioVerseRoomTour</span><span id="debug-brand" class="badge" hidden>第1段階 / 仮表示</span></header>
+    <section id="title-screen" class="screen title-screen" aria-labelledby="title-heading">
+      <h1 id="title-heading" tabindex="-1"><span>MioVerse</span> <span>Room Tour</span></h1>
+      <p class="title-subtitle">きょうは、どの部屋へ？</p>
+      <p class="title-catchcopy">好きがつながる、やさしい居場所</p>
+      <p class="muted title-note"><span id="debug-title-note" hidden>初期4部屋は本人検収済み会話を表示します。<br></span>朝・昼・夜、5日間で15回の部屋巡り。</p>
+      <button id="start-button" class="primary">はじめる <span aria-hidden="true">→</span></button>
+      <button id="title-memories-button" class="secondary memories-entry">思い出</button>
+    </section>
+    <section id="guide-screen" class="screen narrow" hidden aria-labelledby="guide-heading">
+      <p class="eyebrow">QUICK GUIDE</p>
+      <h1 id="guide-heading" tabindex="-1">遊び方</h1>
+      <ol class="guide-list"><li>地図画面のボタンで部屋を選びます。</li><li>返答を選ぶ前なら「地図へ戻る」で入室を取り消せます。</li><li>返答を選ぶと反応文が表示されます。「次の時間へ」で地図へ戻ります。</li></ol>
+      <p class="notice">1日につき朝・昼・夜の3回、5日間で15回訪問します。返答を選ぶと残り回数が減り、訪れた部屋の訪問段階が進みます。反応と締めを読んでから「次の時間へ」で進みましょう。最後は「5日間を終える」で終了します。クリア記録と解放状態は保存されます。周回途中は保存されず、再読み込みすると1日目の朝から始まります。</p>
+      <button id="guide-next" class="primary">地図へ進む <span aria-hidden="true">→</span></button>
+    </section>
+    <section id="map-screen" class="screen" hidden aria-labelledby="map-heading">
+      <div class="section-heading"><div><p class="eyebrow">ROOM DIRECTORY</p><h1 id="map-heading" tabindex="-1">MioVerse案内図</h1></div><span class="muted">部屋を選択</span></div>
+      <button id="map-memories-button" class="memories-entry">思い出</button>
+      <dl id="status" class="status" aria-label="現在の状況"></dl>
+      <p class="status-note">朝・昼・夜、5日間で15回訪問します。</p>
+      <div class="map-art"><img id="map-image" alt="MioVerse案内図" hidden><div id="map-placeholder"><span class="map-symbol" aria-hidden="true">◇</span><strong>MioVerse案内図</strong><p><span id="debug-map-note" hidden>案内図画像を読み込めない場合の仮表示です。<br></span>下のボタンから部屋を選べます。</p></div></div>
+      <h2>訪問できる部屋</h2>
+      <div id="available-rooms" class="room-grid"></div>
+      <h2>別館</h2>
+      <div id="annex-rooms" class="room-grid"></div>
+      <h2 class="locked-heading">未解放の部屋</h2>
+      <div id="locked-rooms" class="locked-grid"></div>
+      <div id="off-map-section" class="off-map-section" hidden>
+        <h2>案内図外 <span class="small">SPECIAL</span></h2>
+        <div id="off-map-rooms" class="room-grid"></div>
+      </div>
+    </section>
+    <section id="conversation-screen" class="screen narrow" hidden aria-labelledby="conversation-heading">
+      <p class="eyebrow">ROOM<span id="debug-room-note" hidden> / 仮入室</span></p>
+      <h1 id="conversation-heading" tabindex="-1"></h1>
+      <p id="speaker" class="speaker"></p>
+      <div class="dialogue"><span id="conversation-badge" class="badge" hidden>仮の会話表示</span><p id="dialogue-text"></p></div>
+      <div id="choices" class="choices" aria-label="返答を選択"></div>
+      <p id="reaction" class="reaction" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
+      <button id="cancel-button" class="secondary">地図へ戻る（入室を取り消す）</button>
+      <button id="next-button" class="primary" hidden>次の時間へ <span aria-hidden="true">→</span></button>
+      <p class="muted small">返答を選ぶと訪問が確定します。反応と締めを読んでから、次へ進めます。</p>
+    </section>
+    <section id="finish-screen" class="screen narrow" hidden aria-labelledby="finish-heading">
+      <p id="finish-label" class="eyebrow">ROOM TOUR</p>
+      <h1 id="finish-heading" tabindex="-1">5日間の訪問が終わりました</h1>
+      <p id="finish-notice" class="notice" hidden>全15回の訪問を終えました。正式なエンディング本文は、まだ表示しません。</p>
+      <div id="ending-body" class="ending-body" hidden></div>
+      <div id="finish-result" class="muted small" hidden>
+        <p class="badge">開発確認用 / エンディング仮判定</p>
+        <ul id="finish-counts" aria-label="各部屋の訪問回数"></ul>
+        <p><strong id="finish-selected"></strong></p>
+        <p id="finish-tie" class="muted small" hidden>同数のため、首位候補のうち最後に訪れた部屋を優先しました</p>
+      </div>
+      <button id="restart-button" class="primary">もう一度巡る</button>
+      <button id="finish-memories-button" class="secondary">思い出</button>
+    </section>
+    <section id="secretary-screen" class="screen narrow" hidden aria-labelledby="secretary-heading">
+      <p class="eyebrow">📘 秘書トワ別館</p>
+      <h1 id="secretary-heading" tabindex="-1">秘書トワ別館</h1>
+      <p id="secretary-text" class="event-text"></p>
+      <button id="secretary-back" class="secondary">地図へ戻る</button>
+    </section>
+    <section id="unlock-screen" class="screen narrow" hidden aria-labelledby="unlock-heading">
+      <p class="eyebrow">CENTRAL PLAZA</p>
+      <h1 id="unlock-heading" tabindex="-1">中央広場</h1>
+      <div class="teal-key" aria-hidden="true">⚿</div>
+      <p id="unlock-text" class="event-text"></p>
+      <button id="unlock-next" class="primary">鍵を持って、もう一度巡る</button>
+    </section>
+    <section id="art-unlock-screen" class="screen narrow" hidden aria-labelledby="art-unlock-heading">
+      <p class="eyebrow">ART LAB</p>
+      <h1 id="art-unlock-heading" tabindex="-1">アートラボが解放されました</h1>
+      <div class="art-reveal" aria-hidden="true">
+        <span class="art-reveal-icon">🎨</span>
+        <div class="art-swatches"><span></span><span></span><span></span><span></span></div>
+        <strong>アートラボ</strong>
+      </div>
+      <p class="notice">アートラボを訪問できるようになりました。</p>
+      <button id="art-unlock-next" class="primary">地図へ進む</button>
+    </section>
+    <section id="stage-unlock-screen" class="screen narrow" hidden aria-labelledby="stage-unlock-heading">
+      <p class="eyebrow">BACKSTAGE</p>
+      <h1 id="stage-unlock-heading" tabindex="-1">黒子の独壇場が解放されました</h1>
+      <div class="stage-reveal" aria-hidden="true">
+        <div class="stage-spotlight"></div>
+        <div class="stage-sign"><span>🎭</span><strong>黒子の独壇場</strong></div>
+        <div class="stage-curtain left"></div><div class="stage-curtain right"></div>
+      </div>
+      <button id="stage-unlock-next" class="primary">地図へ進む</button>
+    </section>
+    <section id="aoi-route-screen" class="screen narrow" hidden aria-labelledby="aoi-route-heading">
+      <p class="eyebrow">BEYOND THE MAP</p>
+      <h1 id="aoi-route-heading" tabindex="-1">案内図の外へ</h1>
+      <div class="aoi-map-edge">
+        <img id="aoi-route-map" alt="">
+        <span class="aoi-route-line" aria-hidden="true"></span>
+      </div>
+      <div id="aoi-route-text" class="ending-body"></div>
+      <button id="aoi-route-next" class="primary aoi-light-button">光の先へ</button>
+    </section>
+    <section id="aoi-discovery-screen" class="screen narrow" hidden aria-labelledby="aoi-discovery-heading">
+      <p class="eyebrow">BEYOND THE MAP</p>
+      <h1 id="aoi-discovery-heading" tabindex="-1">案内図外の研究棟</h1>
+      <div class="aoi-lab-view" aria-hidden="true"><div class="aoi-lab"><span>🧪</span><i></i><i></i><i></i></div></div>
+      <div id="aoi-discovery-text" class="ending-body"></div>
+      <button id="aoi-discovery-next" class="primary">発見を記録して、もう一度巡る</button>
+    </section>
+    <section id="memories-screen" class="screen" hidden aria-labelledby="memories-heading">
+      <p class="eyebrow">MEMORIES</p>
+      <h1 id="memories-heading" tabindex="-1">思い出／エンディング一覧</h1>
+      <p class="muted">見届けたエンディングを、もう一度読むことができます。</p>
+      <div id="memory-list" class="room-grid"></div>
+      <button id="memories-back" class="secondary">地図へ戻る</button>
+    </section>
+    <section id="memory-reading-screen" class="screen narrow" hidden aria-labelledby="memory-reading-heading">
+      <p class="badge">思い出／鑑賞</p>
+      <p id="memory-reading-label" class="eyebrow"></p>
+      <h1 id="memory-reading-heading" tabindex="-1"></h1>
+      <div id="memory-body" class="ending-body"></div>
+      <button id="memory-reading-back" class="primary">思い出へ戻る</button>
+    </section>
+    <footer id="debug-footer" hidden>PROTOTYPE <span aria-hidden="true">/</span> 初期4部屋の本人検収済み会話を収録</footer>
+  </main>
+</body>
+</html>
