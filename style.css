@@ -52,3 +52,10 @@ h2 .small{font-family:var(--font-body)}
 .memory-card:disabled{background:var(--wash);border-style:dashed;color:var(--muted)}
 .memory-card.memory-special{background:linear-gradient(135deg,#edf5f5,#f4efdf);border-color:#8eafb2}
 .memory-card.memory-special:disabled{background:#edf0ec;border-color:#aebbb8}
+
+/* 昼は一つの短い読み物だけを表示し、夜の地図へ進む。 */
+#midday-screen .dialogue{margin:24px 0}
+#midday-screen .dialogue p{margin:0;line-height:1.95}
+
+/* 公開版の更新内容を、タイトル画面で控えめに案内する。 */
+.title-version{font-size:11px;line-height:1.7;letter-spacing:.02em;margin:10px 0 0}
