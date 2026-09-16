@@ -12,8 +12,18 @@
   const stageUnlockId = data.stageUnlockEvent.id;
   const aoiUnlockId = data.aoiUnlockEvent.id;
   const baseRoomIds = Object.values(data.persistence.roomIds);
+  const totalVisits = 10;
+  const runVersion = 2;
+  function selectVisit(conversation, count) {
+    if (!conversation?.visits) return null;
+    const regular = conversation.visits.filter((visit) => visit.fromVisit === 4);
+    if (count >= 4 && regular.length) return regular[(count - 4) % regular.length];
+    return conversation.visits.reduce((selected, candidate) =>
+      candidate.fromVisit <= count && (!selected || candidate.fromVisit > selected.fromVisit)
+        ? candidate : selected, null);
+  }
   function initialSave() {
-    return { schemaVersion: 1, totalClears: 0, completedEndings: [], unlockedRooms: [...baseRoomIds],
+    return { schemaVersion: 2, totalClears: 0, completedEndings: [], unlockedRooms: [...baseRoomIds],
       seenUnlockEvents: [], hasTealKey: false, pendingUnlockEvents: [], currentRun: null };
   }
   function normalizeSave(raw) {
@@ -37,24 +47,28 @@
   }
   // 履歴・回数・日時が矛盾する途中データだけを破棄し、永続実績は保持する。
   function validateRun(run, unlockedRooms) {
-    if (!run || run.version !== 1 || !Array.isArray(run.visitHistory) || !run.visitCounts || !run.currentStatus) return null;
+    // 旧15回訪問の途中データだけ破棄し、クリア・解放・思い出は引き継ぐ。
+    if (!run || run.version !== runVersion || !Array.isArray(run.visitHistory) || !run.visitCounts || !run.currentStatus) return null;
     const rooms = data.rooms.filter((room) => room.conversation);
     const history = run.visitHistory;
-    if (history.length > 15 || history.some((id) => !rooms.some((r) => r.id === id && (r.available || unlockedRooms.includes(id))))) return null;
+    if (history.length > totalVisits || history.some((id) => !rooms.some((r) => r.id === id && (r.available || unlockedRooms.includes(id))))) return null;
     const counts = Object.fromEntries(rooms.map((r) => [r.id, history.filter((id) => id === r.id).length]));
     if (rooms.some((r) => run.visitCounts[r.id] !== counts[r.id])) return null;
     const confirmed = run.confirmedVisit;
     if (confirmed !== null) {
       if (!confirmed || history.length === 0 || confirmed.roomId !== history[history.length - 1]) return null;
       const room = rooms.find((r) => r.id === confirmed.roomId);
-      const visit = room.conversation.visits.filter((v) => v.fromVisit <= counts[room.id]).at(-1);
+      const visit = selectVisit(room.conversation, counts[room.id]);
       if (!visit?.choices.some((c) => c.id === confirmed.choiceId)) return null;
     }
     const slot = history.length - (confirmed ? 1 : 0);
-    if (slot < 0 || slot >= 15) return null;
-    const status = { day: Math.floor(slot / 3) + 1, timeLabel: ["朝", "昼", "夜"][slot % 3], remainingVisits: 15 - history.length };
-    if (Object.keys(status).some((key) => run.currentStatus[key] !== status[key])) return null;
-    return { version: 1, currentStatus: status, visitCounts: counts, visitHistory: [...history],
+    if (slot < 0 || slot >= totalVisits) return null;
+    const day = Math.floor(slot / 2) + 1;
+    const labels = confirmed ? [slot % 2 ? "夜" : "朝"]
+      : slot % 2 ? ["昼", "夜"] : ["朝"];
+    if (run.currentStatus.day !== day || !labels.includes(run.currentStatus.timeLabel)
+      || run.currentStatus.remainingVisits !== totalVisits - history.length) return null;
+    return { version: runVersion, currentStatus: { ...run.currentStatus }, visitCounts: counts, visitHistory: [...history],
       confirmedVisit: confirmed ? { roomId: confirmed.roomId, choiceId: confirmed.choiceId } : null };
   }
   function storageUnavailable() {
@@ -138,9 +152,9 @@
     currentStatus: { ...data.initialStatus }, visitCounts: initialVisitCounts(), activeVisit: null,
     visitHistory: [], endingResult: null, clearRegistered: false, confirmedVisit: null
   };
-  const screens = ["title", "guide", "map", "conversation", "finish", "secretary", "unlock", "art-unlock", "stage-unlock", "aoi-route", "aoi-discovery", "memories", "memory-reading"];
+  const screens = ["title", "guide", "map", "conversation", "midday", "finish", "secretary", "unlock", "art-unlock", "stage-unlock", "aoi-route", "aoi-discovery", "memories", "memory-reading"];
   function saveRun() {
-    save.currentRun = { version: 1, currentStatus: { ...state.currentStatus },
+    save.currentRun = { version: runVersion, currentStatus: { ...state.currentStatus },
       visitCounts: { ...state.visitCounts }, visitHistory: [...state.visitHistory],
       confirmedVisit: state.confirmedVisit ? { ...state.confirmedVisit } : null };
     persistSave();
@@ -153,12 +167,12 @@
     state.confirmedVisit = run.confirmedVisit ? { ...run.confirmedVisit } : null;
     state.guideSeen = true;
     renderStatus();
-    showScreen("map");
-    // 返答確定直後は反応と締めを復元し、15回目も最後まで読めるようにする。
+    if (state.currentStatus.timeLabel === "昼") showMidday();
+    else showScreen("map");
+    // 返答確定直後は反応と締めを復元し、10回目も最後まで読めるようにする。
     if (state.confirmedVisit) enterRoom(data.rooms.find((r) => r.id === state.confirmedVisit.roomId), state.confirmedVisit);
   }
   byId("start-button").textContent = save.currentRun ? "つづきから" : "はじめる";
-  const timeLabels = ["朝", "昼", "夜"];
   const endingRooms = data.rooms.filter((room) => ["partner", "lounge", "shelter", "recovery", "secretary", "art", "stage", "aoi"].includes(room.id));
   function selectEndingRoom(visitCounts, visitHistory) {
     const maximum = Math.max(...endingRooms.map((room) => visitCounts[room.id] ?? 0));
@@ -169,7 +183,7 @@
     return { roomId, tied: leaders.length > 1 };
   }
   function registerClear() {
-    if (state.clearRegistered || state.visitHistory.length !== 15 || state.currentStatus.remainingVisits !== 0) return;
+    if (state.clearRegistered || state.visitHistory.length !== totalVisits || state.currentStatus.remainingVisits !== 0) return;
     const endingId = data.endings?.[state.endingResult.roomId]?.id
       ?? "ending." + data.persistence.roomIds[state.endingResult.roomId];
     if (!data.endings?.[state.endingResult.roomId]) return;
@@ -267,7 +281,7 @@
     const ending = data.endings?.[state.endingResult.roomId];
     byId("finish-label").textContent = ending ? ending.number : (DEBUG_MODE ? "ROOM TOUR / 仮終了" : "ROOM TOUR");
     byId("finish-heading").textContent = ending ? ending.title : "5日間の訪問が終わりました";
-    byId("finish-notice").textContent = "全15回の訪問を終えました。正式なエンディング本文は、まだ表示しません。";
+    byId("finish-notice").textContent = "全10回の訪問を終えました。正式なエンディング本文は、まだ表示しません。";
     byId("finish-notice").hidden = !DEBUG_MODE || Boolean(ending);
     renderEndingBody(ending, "clear");
     byId("restart-button").textContent = nextUnlockEvent() === unlockId ? "中央広場へ"
@@ -289,10 +303,16 @@
   }
   function showScreen(name) {
     state.screen = name;
-    if (name === "map") { renderRoomVisitCounts(); renderSecretaryCard(); renderUnlockedRoomCards(); }
+    if (name === "map") { renderMapImage(); renderRoomVisitCounts(); renderSecretaryCard(); renderUnlockedRoomCards(); }
     screens.forEach((screen) => { byId(`${screen}-screen`).hidden = screen !== name; });
     byId(`${name}-screen`).querySelector("h1").focus();
     window.scrollTo(0, 0);
+  }
+  function showMidday() {
+    const scene = data.middayScenes[state.currentStatus.day - 1];
+    byId("midday-heading").textContent = `${state.currentStatus.day}日目の昼　${scene.title}`;
+    byId("midday-text").textContent = scene.body;
+    showScreen("midday");
   }
   function returnToMap() {
     const roomId = state.room?.id;
@@ -304,7 +324,8 @@
   }
   function enterRoom(room, confirmed = null) {
     const canEnter = ["secretary", "art", "stage", "aoi"].includes(room.id) ? save.unlockedRooms.includes(room.id) : room.available;
-    if (!canEnter || state.screen !== "map" || (!confirmed && state.currentStatus.remainingVisits <= 0)) return;
+    if (!canEnter || state.screen !== "map" || !["朝", "夜"].includes(state.currentStatus.timeLabel)
+      || (!confirmed && state.currentStatus.remainingVisits <= 0)) return;
     state.room = room;
     // 入室ごとの識別子。取り消した会話の古いボタンによる確定も防ぐ。
     const activeVisit = {};
@@ -313,11 +334,8 @@
     const conversation = room.conversation;
     const nextVisit = (state.visitCounts[room.id] ?? 0) + (confirmed ? 0 : 1);
     let restoredButton = null;
-    // fromVisit の大きい適用段階を選ぶ。4回目以降は常連会話を使用。
-    const visit = conversation?.visits.reduce((selected, candidate) => {
-      return candidate.fromVisit <= nextVisit && (!selected || candidate.fromVisit > selected.fromVisit)
-        ? candidate : selected;
-    }, null);
+    // 4回目以降の常連会話は訪問回数で順番に回す。再開後も同じ本文になる。
+    const visit = selectVisit(conversation, nextVisit);
     const intro = conversation?.omitFirstIntroduction && nextVisit === 1
       ? null : conversation?.introductions[state.currentStatus.timeLabel];
     byId("conversation-heading").textContent = room.name;
@@ -329,7 +347,7 @@
     byId("reaction").textContent = "";
     byId("cancel-button").hidden = false;
     byId("next-button").hidden = true;
-    byId("next-button").textContent = "次の時間へ →";
+    byId("next-button").textContent = "次へ →";
     byId("choices").replaceChildren();
     const choices = visit?.choices ?? room.choices ?? data.placeholderConversation.choices;
     choices.forEach((choice) => {
@@ -354,7 +372,7 @@
         byId("cancel-button").hidden = true;
         byId("next-button").hidden = false;
         byId("next-button").textContent = state.currentStatus.remainingVisits === 0
-          ? "5日間を終える" : "次の時間へ →";
+          ? "5日間を終える" : state.currentStatus.timeLabel === "朝" ? "昼の出来事へ" : "翌朝の地図へ";
         // 長い反応文でも、締めや次ボタンへ飛ばず本文の先頭から読めるようにする。
         byId("reaction").focus({ preventScroll: true });
         byId("reaction").scrollIntoView({ block: "start" });
@@ -383,6 +401,18 @@
     data.rooms.filter((room) => room.available || ["art", "stage", "aoi"].includes(room.id)).forEach((room) => {
       byId(`room-count-${room.id}`).textContent = `訪問 ${state.visitCounts[room.id] ?? 0}回`;
     });
+  }
+  function renderMapImage() {
+    const image = byId("map-image");
+    const night = state.currentStatus.timeLabel === "夜" && data.map.nightImageSrc;
+    const source = night ? data.map.nightImageSrc : data.map.imageSrc;
+    image.alt = night ? (data.map.nightAlt || data.map.alt) : data.map.alt;
+    if (image._mioMapSource !== source) {
+      image.hidden = true;
+      byId("map-placeholder").hidden = false;
+      image._mioMapSource = source;
+      image.src = source;
+    }
   }
   renderStatus();
   data.rooms.forEach((room) => {
@@ -466,10 +496,9 @@
   byId("aoi-route-map").addEventListener("error", () => { byId("aoi-route-map").hidden = true; });
   if (data.map.imageSrc) {
     const image = byId("map-image");
-    image.alt = data.map.alt;
     image.addEventListener("load", () => { image.hidden = false; byId("map-placeholder").hidden = true; });
     image.addEventListener("error", () => { image.hidden = true; byId("map-placeholder").hidden = false; });
-    image.src = data.map.imageSrc;
+    renderMapImage();
   }
   byId("start-button").addEventListener("click", () => {
     if (state.screen !== "title") return;
@@ -492,13 +521,23 @@
       showScreen("finish");
       return;
     }
-    const nextTime = timeLabels.indexOf(state.currentStatus.timeLabel) + 1;
-    if (nextTime === timeLabels.length) state.currentStatus.day += 1;
-    state.currentStatus.timeLabel = timeLabels[nextTime % timeLabels.length];
+    if (state.currentStatus.timeLabel === "朝") state.currentStatus.timeLabel = "昼";
+    else { state.currentStatus.day += 1; state.currentStatus.timeLabel = "朝"; }
     state.confirmedVisit = null;
     saveRun();
     renderStatus();
-    returnToMap();
+    state.room = null;
+    state.activeVisit = null;
+    state.answered = false;
+    if (state.currentStatus.timeLabel === "昼") showMidday();
+    else showScreen("map");
+  });
+  byId("midday-next").addEventListener("click", () => {
+    if (state.screen !== "midday" || state.currentStatus.timeLabel !== "昼") return;
+    state.currentStatus.timeLabel = "夜";
+    saveRun();
+    renderStatus();
+    showScreen("map");
   });
   function startNewRun() {
     state.currentStatus = { ...data.initialStatus };
@@ -524,7 +563,7 @@
     ["conversation-heading", "speaker", "dialogue-text", "reaction"].forEach((id) => { byId(id).textContent = ""; });
     byId("cancel-button").hidden = false;
     byId("next-button").hidden = true;
-    byId("next-button").textContent = "次の時間へ →";
+    byId("next-button").textContent = "次へ →";
     saveRun();
     renderStatus();
     showScreen("map");

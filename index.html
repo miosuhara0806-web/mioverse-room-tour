@@ -7,9 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@400;500;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260915-1">
-  <script src="data.js?v=20260915-1" defer></script>
-  <script src="game.js?v=20260915-1" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260916-1">
+  <script src="data.js?v=20260916-1" defer></script>
+  <script src="game.js?v=20260916-1" defer></script>
 </head>
 <body>
   <main class="app">
@@ -19,22 +19,22 @@
       <h1 id="title-heading" tabindex="-1"><span>MioVerse</span> <span>Room Tour</span></h1>
       <p class="title-subtitle">きょうは、どの部屋へ？</p>
       <p class="title-catchcopy">好きがつながる、やさしい居場所</p>
-      <p class="muted title-note"><span id="debug-title-note" hidden>初期4部屋は本人検収済み会話を表示します。<br></span>朝・昼・夜、5日間で15回の部屋巡り。</p>
+      <p class="muted title-note"><span id="debug-title-note" hidden>初期4部屋は本人検収済み会話を表示します。<br></span>朝と夜に部屋を訪問。昼の出来事を挟みながら、5日間で10回の部屋巡り。</p>
       <button id="start-button" class="primary">はじめる <span aria-hidden="true">→</span></button>
       <button id="title-memories-button" class="secondary memories-entry">思い出</button>
     </section>
     <section id="guide-screen" class="screen narrow" hidden aria-labelledby="guide-heading">
       <p class="eyebrow">QUICK GUIDE</p>
       <h1 id="guide-heading" tabindex="-1">遊び方</h1>
-      <ol class="guide-list"><li>地図画面のボタンで部屋を選びます。</li><li>返答を選ぶ前なら「地図へ戻る」で入室を取り消せます。</li><li>返答を選ぶと反応文が表示されます。「次の時間へ」で地図へ戻ります。</li></ol>
-      <p class="notice">1日につき朝・昼・夜の3回、5日間で15回訪問します。返答を選ぶと残り回数が減り、訪れた部屋の訪問段階が進みます。反応と締めを読んでから「次の時間へ」で進みましょう。最後は「5日間を終える」で終了します。クリア記録と解放状態、周回の進行は自動保存されます。途中で閉じても「つづきから」で再開できます。</p>
+      <ol class="guide-list"><li>朝と夜に地図画面のボタンから部屋を選びます。</li><li>返答を選ぶ前なら「地図へ戻る」で入室を取り消せます。</li><li>返答と締めを読んでから次へ進みます。昼は選択肢のない共通の出来事を読みます。</li></ol>
+      <p class="notice">1日につき朝と夜の2回、5日間で10回訪問します。昼の出来事は訪問回数に数えません。返答を選ぶと残り回数が減り、訪れた部屋の訪問段階が進みます。朝の訪問後は「昼の出来事へ」、昼を読んだら「夜の地図へ」。夜の訪問後は翌朝へ進み、5日目の夜は「5日間を終える」で終了します。クリア記録と解放状態、周回の進行は自動保存されます。途中で閉じても「つづきから」で再開できます。</p>
       <button id="guide-next" class="primary">地図へ進む <span aria-hidden="true">→</span></button>
     </section>
     <section id="map-screen" class="screen" hidden aria-labelledby="map-heading">
       <div class="section-heading"><div><p class="eyebrow">ROOM DIRECTORY</p><h1 id="map-heading" tabindex="-1">MioVerse案内図</h1></div><span class="muted">部屋を選択</span></div>
       <button id="map-memories-button" class="memories-entry">思い出</button>
       <dl id="status" class="status" aria-label="現在の状況"></dl>
-      <p class="status-note">朝・昼・夜、5日間で15回訪問します。</p>
+      <p class="status-note">朝と夜に訪問。昼は共通の出来事を読みます。5日間で計10回。</p>
       <div class="map-art"><img id="map-image" alt="MioVerse案内図" hidden><div id="map-placeholder"><span class="map-symbol" aria-hidden="true">◇</span><strong>MioVerse案内図</strong><p><span id="debug-map-note" hidden>案内図画像を読み込めない場合の仮表示です。<br></span>下のボタンから部屋を選べます。</p></div></div>
       <h2>訪問できる部屋</h2>
       <div id="available-rooms" class="room-grid"></div>
@@ -55,13 +55,19 @@
       <div id="choices" class="choices" aria-label="返答を選択"></div>
       <p id="reaction" class="reaction" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
       <button id="cancel-button" class="secondary">地図へ戻る（入室を取り消す）</button>
-      <button id="next-button" class="primary" hidden>次の時間へ <span aria-hidden="true">→</span></button>
+      <button id="next-button" class="primary" hidden>次へ <span aria-hidden="true">→</span></button>
       <p class="muted small">返答を選ぶと訪問が確定します。反応と締めを読んでから、次へ進めます。</p>
+    </section>
+    <section id="midday-screen" class="screen narrow" hidden aria-labelledby="midday-heading">
+      <p class="eyebrow">MIDDAY / ひと息</p>
+      <h1 id="midday-heading" tabindex="-1"></h1>
+      <div class="dialogue"><p id="midday-text"></p></div>
+      <button id="midday-next" class="primary">夜の地図へ <span aria-hidden="true">→</span></button>
     </section>
     <section id="finish-screen" class="screen narrow" hidden aria-labelledby="finish-heading">
       <p id="finish-label" class="eyebrow">ROOM TOUR</p>
       <h1 id="finish-heading" tabindex="-1">5日間の訪問が終わりました</h1>
-      <p id="finish-notice" class="notice" hidden>全15回の訪問を終えました。正式なエンディング本文は、まだ表示しません。</p>
+      <p id="finish-notice" class="notice" hidden>全10回の訪問を終えました。正式なエンディング本文は、まだ表示しません。</p>
       <div id="ending-body" class="ending-body" hidden></div>
       <div id="finish-result" class="muted small" hidden>
         <p class="badge">開発確認用 / エンディング仮判定</p>
