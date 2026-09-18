@@ -21,13 +21,13 @@ h2 .small{font-family:var(--font-body)}
 .stage-sign span{font-size:56px}.stage-sign strong{font-family:var(--font-heading);font-size:clamp(22px,4vw,30px)}
 .stage-curtain{position:absolute;top:0;bottom:0;width:15%;background:repeating-linear-gradient(90deg,#461426,#8a2c40 40%,#56172b 80%);box-shadow:0 0 18px #0006}
 .stage-curtain.left{left:0}.stage-curtain.right{right:0}
-#stage-unlock-screen:not([hidden]) .stage-reveal{animation:stage-darken 1.4s ease-out both}
-#stage-unlock-screen:not([hidden]) .stage-spotlight,#stage-unlock-screen:not([hidden]) .stage-sign{animation:stage-light 3.5s ease-in-out both}
-#stage-unlock-screen:not([hidden]) .stage-curtain{animation:stage-curtain-open 4s ease-in-out both}
+#stage-unlock-screen.stage-animation-active .stage-reveal{animation:stage-darken 1.4s ease-out both}
+#stage-unlock-screen.stage-animation-active .stage-spotlight,#stage-unlock-screen.stage-animation-active .stage-sign{animation:stage-light 3.5s ease-in-out both}
+#stage-unlock-screen.stage-animation-active .stage-curtain{animation:stage-curtain-open 4s ease-in-out both}
 @keyframes stage-darken{from{background:#edece5}to{background:#17131b}}
 @keyframes stage-light{0%,35%{opacity:0}100%{opacity:1}}
-@keyframes stage-curtain-open{0%,40%{width:50%;opacity:0}55%{opacity:1}100%{width:15%;opacity:1}}
-@media(prefers-reduced-motion:reduce){#stage-unlock-screen:not([hidden]) .stage-reveal,#stage-unlock-screen:not([hidden]) .stage-spotlight,#stage-unlock-screen:not([hidden]) .stage-sign,#stage-unlock-screen:not([hidden]) .stage-curtain{animation:none}}
+@keyframes stage-curtain-open{0%,40%{width:50%;opacity:1}100%{width:15%;opacity:1}}
+@media(prefers-reduced-motion:reduce){#stage-unlock-screen.stage-animation-active .stage-reveal,#stage-unlock-screen.stage-animation-active .stage-spotlight,#stage-unlock-screen.stage-animation-active .stage-sign,#stage-unlock-screen.stage-animation-active .stage-curtain{animation:none}}
 
 /* 案内図外の発見。光は一度だけ穏やかに変化させる。 */
 .off-map-section{margin-top:32px;padding-top:8px;border-top:1px dashed #70969c}

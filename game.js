@@ -391,6 +391,12 @@
     state.screen = name;
     if (name === "map") { renderMapImage(); renderRoomVisitCounts(); renderSecretaryCard(); renderUnlockedRoomCards(); }
     screens.forEach((screen) => { byId(`${screen}-screen`).hidden = screen !== name; });
+    if (name === "stage-unlock") {
+      const stageScreen = byId("stage-unlock-screen");
+      stageScreen.classList.remove("stage-animation-active");
+      void stageScreen.offsetWidth;
+      stageScreen.classList.add("stage-animation-active");
+    }
     byId(`${name}-screen`).querySelector("h1").focus();
     window.scrollTo(0, 0);
   }
