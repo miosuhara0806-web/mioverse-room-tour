@@ -47,6 +47,8 @@ h2 .small{font-family:var(--font-body)}
 
 /* 思い出は既存の部屋カードと同じ余白・タップ寸法を使用。 */
 .memories-entry{margin-bottom:12px}.title-screen .memories-entry{max-width:320px}
+.title-reset{display:block;min-height:44px;margin-top:2px;padding:8px 4px;border:0;background:transparent;color:var(--muted);font-size:12px;text-decoration:underline;text-decoration-color:#aebbb8;text-underline-offset:4px}
+.title-reset:hover:not(:disabled){border-color:transparent;background:transparent;color:var(--ink)}
 .memory-card{grid-template-columns:minmax(0,1fr);gap:8px;min-width:0}
 .memory-number{font-size:12px;letter-spacing:.08em;color:var(--green);overflow-wrap:anywhere}
 .memory-card:disabled{background:var(--wash);border-style:dashed;color:var(--muted)}

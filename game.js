@@ -651,6 +651,17 @@
     if (save.currentRun) { resumeRun(); return; }
     if (!showNextUnlockEvent()) { saveRun(); showScreen(state.guideSeen ? "map" : "guide"); }
   });
+  byId("reset-all-data-button").addEventListener("click", () => {
+    if (state.screen !== "title") return;
+    const confirmed = window.confirm("これまでの思い出・解放状況・進行データをすべて削除し、初期状態に戻します。元に戻せません。よろしいですか？");
+    if (!confirmed) return;
+    try {
+      localStorage.removeItem(data.persistence.key);
+      window.location.reload();
+    } catch {
+      storageUnavailable();
+    }
+  });
   byId("guide-next").addEventListener("click", () => { state.guideSeen = true; showScreen("map"); });
   byId("cancel-button").addEventListener("click", () => {
     if (state.screen === "conversation" && !state.answered) returnToMap();
