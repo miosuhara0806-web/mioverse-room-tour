@@ -59,3 +59,48 @@ h2 .small{font-family:var(--font-body)}
 
 /* 公開版の更新内容を、タイトル画面で控えめに案内する。 */
 .title-version{font-size:11px;line-height:1.7;letter-spacing:.02em;margin:10px 0 0}
+
+/* 地図の部屋名を押すと、進行に触れず住人紹介だけを表示する。 */
+.map-profile-hint{max-width:760px;margin:0 auto 10px;color:var(--green);font-size:13px}
+.map-art{position:relative}
+#map-profile-hotspots{position:absolute;inset:0;z-index:2;pointer-events:none}
+.profile-hotspot{position:absolute;min-height:38px;padding:0;border:1px solid transparent;border-radius:10px;background:transparent;pointer-events:auto}
+.profile-hotspot:hover:not(:disabled){border-color:rgba(255,255,255,.92);background:rgba(255,255,255,.18);box-shadow:0 0 0 2px rgba(40,91,76,.55),0 4px 18px rgba(18,47,40,.25)}
+.profile-hotspot:focus-visible{outline:3px solid #f3b457;outline-offset:2px;background:rgba(255,255,255,.2)}
+.profile-directory-button{display:flex;align-items:center;justify-content:center;width:100%;border-color:#8eafb2;background:#f4faf8;color:var(--green);font-weight:700;text-align:center}
+
+/* 紹介カードは画面内で単独スクロールし、背面のゲーム状態はそのまま保つ。 */
+body.modal-open{overflow:hidden}
+.character-modal{position:fixed;inset:0;z-index:1000}
+.character-modal-backdrop{display:grid;place-items:center;width:100%;height:100%;padding:28px;background:rgba(20,42,39,.72);backdrop-filter:blur(4px)}
+.character-card{position:relative;display:grid;grid-template-columns:minmax(260px,.85fr) minmax(320px,1.15fr);width:min(900px,100%);max-height:calc(100vh - 56px);overflow:auto;border:1px solid rgba(255,255,255,.7);border-radius:24px;background:linear-gradient(145deg,#fffef9,#f1f4eb);box-shadow:0 24px 70px rgba(9,28,24,.36)}
+.character-close{position:sticky;top:14px;grid-column:1 / -1;grid-row:1;z-index:4;justify-self:end;width:44px;height:44px;min-height:44px;margin:14px 14px -58px 0;padding:0;border-color:#cbd6cd;border-radius:50%;background:rgba(255,255,255,.92);font-size:28px;line-height:1;text-align:center}
+.character-visual{display:flex;align-items:flex-end;justify-content:center;min-height:520px;padding:64px 12px 24px;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.96),rgba(221,235,226,.88) 58%,rgba(197,220,209,.78));overflow:hidden}
+.character-visual img{display:block;width:100%;height:auto;max-height:540px;object-fit:contain;filter:drop-shadow(0 16px 18px rgba(34,60,54,.16))}
+.character-copy{align-self:center;padding:72px 54px 54px;text-align:left}
+.character-copy .eyebrow{color:var(--green);font-size:12px}
+.character-copy h2{margin:0 0 22px;font-family:var(--font-heading);font-size:clamp(28px,4vw,42px);line-height:1.35}
+.character-catch{margin:0 0 30px;color:var(--green);font-family:var(--font-heading);font-size:clamp(18px,2.3vw,24px);font-weight:700;line-height:1.8}
+.character-description{color:#425651;line-height:2}
+.character-description p{margin:0 0 1.15em}
+.character-description p:last-child{margin-bottom:0}
+
+@media(max-width:700px){
+  .map-profile-hint{font-size:12px}
+  .character-modal-backdrop{align-items:center;padding:12px}
+  .character-card{display:block;width:100%;max-height:calc(100vh - 24px);border-radius:18px}
+  .character-close{position:sticky;display:block;float:right;margin:12px 12px -56px 0}
+  .character-visual{clear:both;min-height:0;height:min(39vh,340px);padding:42px 8px 8px}
+  .character-visual img{width:auto;max-width:100%;height:100%;max-height:none}
+  .character-copy{padding:28px 24px 30px}
+  .character-copy h2{font-size:28px;margin-bottom:14px}
+  .character-catch{font-size:18px;line-height:1.7;margin-bottom:20px}
+  .character-description{font-size:14px;line-height:1.9}
+}
+
+@media(max-width:380px){
+  .character-modal-backdrop{padding:8px}
+  .character-card{max-height:calc(100vh - 16px)}
+  .character-visual{height:min(34vh,285px)}
+  .character-copy{padding:24px 19px 26px}
+}

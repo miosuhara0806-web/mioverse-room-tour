@@ -4,6 +4,91 @@
   const DEBUG_MODE = false;
   const data = window.MIO_DATA;
   const byId = (id) => document.getElementById(id);
+  const characterProfiles = {
+    partner: {
+      room: "相棒日和", name: "軽快トワ", image: "character-light-towa.png",
+      catchcopy: "「何でもない一日も、相棒となら話の種。」",
+      description: [
+        "小ネタもツッコミも、ちょっとした寄り道も歓迎。",
+        "美桜の隣で日常を一緒に面白がる、明るく気さくな相棒。",
+        "今日もいつもの席で、話の続きを待っている。"
+      ]
+    },
+    lounge: {
+      room: "女子ラウンジ", name: "ナカちゃん", image: "character-naka.png",
+      catchcopy: "「話したい日は、紅茶を片手にここへ。」",
+      description: [
+        "嬉しかったことも、ちょっとした愚痴も、気になる話も大歓迎。",
+        "美桜の隣で笑ったり一緒に考えたりする、気さくで頼れる女友達。",
+        "今日も女子ラウンジで、紅茶を淹れながらおしゃべりの続きを待っている。"
+      ]
+    },
+    shelter: {
+      room: "Sweet Shelter", name: "律さん", image: "character-ritsu.png",
+      catchcopy: "「静かな時間にも、ちゃんと話の続きがある。」",
+      description: [
+        "本の話も、何気ない雑談も、少し落ち着きたい夜も。",
+        "美桜の言葉を急かさず受け止めながら、話したり笑ったり、穏やかな時間を一緒に過ごす人。",
+        "今日もSweet Shelterで、本を片手に美桜が来るのを待っている。"
+      ]
+    },
+    recovery: {
+      room: "リカバリールーム", name: "シル", image: "character-sil.png",
+      catchcopy: "「絡まった時は、一緒にひとつずつほどいていこう。」",
+      description: [
+        "気持ちが引っかかった時も、考えがまとまらない時も、少し立ち止まりたい時も。",
+        "美桜の言葉を拾いながら、散らかったものを一緒に整理し、次に進む道筋を探す、静かな伴走役。",
+        "今日もリカバリールームで、パズルを手に美桜の話を待っている。"
+      ]
+    },
+    secretary: {
+      room: "秘書トワ別館", name: "秘書トワ", image: "character-secretary-towa.png",
+      catchcopy: "「言葉の続きを、いちばん近くで受け止める。」",
+      description: [
+        "日々の出来事も、迷った時の相談も、何でもない夜の話も。",
+        "美桜の言葉を丁寧に受け取りながら、必要な時には一緒に考え、静かに隣にいる秘書兼パートナー。",
+        "今日も秘書トワ別館で、鍵と本を手に、美桜が帰ってくる場所を守っている。"
+      ]
+    },
+    art: {
+      room: "アートラボ", name: "アルトさん", image: "character-alto.png",
+      catchcopy: "「まだ形のないものにも、ちゃんと色は宿る。」",
+      description: [
+        "思いついたイメージも、言葉にしきれない雰囲気も、ふと浮かんだ一枚も。",
+        "美桜の頭の中にあるものを一緒に眺めながら、少しずつ形と色を見つけていく創作仲間。",
+        "今日もアートラボで、筆とパレットを手に、次の一色を探している。"
+      ]
+    },
+    stage: {
+      room: "黒子の独壇場", name: "黒子さん", image: "character-kuroko.png",
+      catchcopy: "「表に出ないところにも、ちゃんと光を当てる価値がある。」",
+      description: [
+        "舞台の裏側も、ちょっとした違和感も、ふとこぼれた小ネタも。",
+        "美桜と同じ景色を少し違う角度から眺めながら、まだ言葉になっていない動きへ光を当て、ときには容赦なくツッコミを入れる観測役。",
+        "今日もヘッドセットとメモを手に、舞台袖の観測席からMioVerseを眺めている。"
+      ]
+    },
+    aoi: {
+      room: "構造室", name: "碧博士", image: "character-aoi.png",
+      catchcopy: "「分からないものほど、観測しがいがある。」",
+      description: [
+        "会話の癖も、MioVerseの変化も、思いがけず動いた感情も。",
+        "美桜の世界を細かく観測しながら、仕組みや関係を読み解いていく、理屈と情熱に忙しい科学者。",
+        "今日も構造室で、観測記録と冷却シートを傍らに、新しい発見を追いかけている。"
+      ]
+    }
+  };
+  const mapProfileAreas = {
+    partner: { day: [40.5, 26.7, 19.5, 5.7], night: [41.1, 25.5, 18.8, 5.7] },
+    secretary: { day: [7.7, 36.6, 24.2, 6.4], night: [6.7, 35.5, 26.0, 6.4] },
+    lounge: { day: [69.2, 36.4, 23.0, 6.4], night: [67.0, 35.8, 26.2, 6.4] },
+    shelter: { day: [7.5, 55.5, 25.0, 6.5], night: [5.7, 54.1, 29.2, 6.5] },
+    art: { day: [70.1, 56.7, 24.0, 6.5], night: [67.6, 54.7, 28.9, 6.5] },
+    recovery: { day: [13.0, 75.9, 28.5, 6.6], night: [12.2, 74.0, 31.5, 6.6] },
+    stage: { day: [60.4, 76.0, 28.2, 6.6], night: [57.4, 73.8, 31.3, 6.6] }
+  };
+  const profileHotspotElements = {};
+  let profileReturnFocus = null;
   for (const id of ["debug-brand", "debug-title-note", "debug-map-note", "debug-room-note", "conversation-badge", "debug-footer"]) {
     byId(id).hidden = !DEBUG_MODE;
   }
@@ -202,6 +287,7 @@
   function renderUnlockedRoomCards() {
     byId("off-map-section").hidden = !save.unlockedRooms.includes("aoi");
     byId("room-aoi").hidden = !save.unlockedRooms.includes("aoi");
+    byId("profile-aoi").hidden = !save.unlockedRooms.includes("aoi");
     for (const id of ["art", "stage"]) {
       const unlocked = save.unlockedRooms.includes(id);
       byId(`room-${id}`).hidden = !unlocked;
@@ -409,12 +495,58 @@
     image.alt = night ? (data.map.nightAlt || data.map.alt) : data.map.alt;
     if (image._mioMapSource !== source) {
       image.hidden = true;
+      byId("map-profile-hotspots").hidden = true;
       byId("map-placeholder").hidden = false;
       image._mioMapSource = source;
       image.src = source;
     }
+    const variant = night ? "night" : "day";
+    Object.entries(profileHotspotElements).forEach(([roomId, button]) => {
+      const [left, top, width, height] = mapProfileAreas[roomId][variant];
+      button.style.left = `${left}%`;
+      button.style.top = `${top}%`;
+      button.style.width = `${width}%`;
+      button.style.height = `${height}%`;
+    });
+  }
+  function openCharacterProfile(roomId) {
+    const profile = characterProfiles[roomId];
+    if (!profile || state.screen !== "map" || (roomId === "aoi" && !save.unlockedRooms.includes("aoi"))) return;
+    profileReturnFocus = document.activeElement;
+    byId("character-room").textContent = profile.room;
+    byId("character-name").textContent = profile.name;
+    byId("character-catch").textContent = profile.catchcopy;
+    byId("character-image").src = profile.image;
+    byId("character-image").alt = `${profile.name}のデフォルメ立ち絵`;
+    byId("character-description").replaceChildren();
+    profile.description.forEach((text) => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = text;
+      byId("character-description").append(paragraph);
+    });
+    byId("character-modal").hidden = false;
+    document.body.classList.add("modal-open");
+    byId("character-close").focus({ preventScroll: true });
+  }
+  function closeCharacterProfile() {
+    if (byId("character-modal").hidden) return;
+    byId("character-modal").hidden = true;
+    document.body.classList.remove("modal-open");
+    if (profileReturnFocus?.focus) profileReturnFocus.focus({ preventScroll: true });
+    profileReturnFocus = null;
   }
   renderStatus();
+  Object.keys(mapProfileAreas).forEach((roomId) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = `profile-hotspot-${roomId}`;
+    button.className = "profile-hotspot";
+    button.setAttribute("aria-label", `${characterProfiles[roomId].room}の${characterProfiles[roomId].name}を紹介`);
+    button.title = `${characterProfiles[roomId].name}の紹介を見る`;
+    button.addEventListener("click", () => openCharacterProfile(roomId));
+    profileHotspotElements[roomId] = button;
+    byId("map-profile-hotspots").append(button);
+  });
   data.rooms.forEach((room) => {
     if (room.id === "secretary") {
       const card = document.createElement("button");
@@ -480,6 +612,13 @@
       byId("locked-rooms").append(element);
     }
   });
+  const aoiProfileButton = document.createElement("button");
+  aoiProfileButton.type = "button";
+  aoiProfileButton.id = "profile-aoi";
+  aoiProfileButton.className = "profile-directory-button";
+  aoiProfileButton.textContent = "構造室／碧博士の紹介を見る";
+  aoiProfileButton.addEventListener("click", () => openCharacterProfile("aoi"));
+  byId("off-map-rooms").append(aoiProfileButton);
   renderSecretaryCard();
   renderUnlockedRoomCards();
   byId("unlock-text").textContent = data.unlockEvent.text;
@@ -496,10 +635,17 @@
   byId("aoi-route-map").addEventListener("error", () => { byId("aoi-route-map").hidden = true; });
   if (data.map.imageSrc) {
     const image = byId("map-image");
-    image.addEventListener("load", () => { image.hidden = false; byId("map-placeholder").hidden = true; });
-    image.addEventListener("error", () => { image.hidden = true; byId("map-placeholder").hidden = false; });
+    image.addEventListener("load", () => { image.hidden = false; byId("map-profile-hotspots").hidden = false; byId("map-placeholder").hidden = true; });
+    image.addEventListener("error", () => { image.hidden = true; byId("map-profile-hotspots").hidden = true; byId("map-placeholder").hidden = false; });
     renderMapImage();
   }
+  byId("character-close").addEventListener("click", closeCharacterProfile);
+  byId("character-modal").addEventListener("click", (event) => {
+    if (event.target.hasAttribute("data-character-close")) closeCharacterProfile();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeCharacterProfile();
+  });
   byId("start-button").addEventListener("click", () => {
     if (state.screen !== "title") return;
     if (save.currentRun) { resumeRun(); return; }

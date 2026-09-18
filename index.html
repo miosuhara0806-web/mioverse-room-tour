@@ -7,9 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@400;500;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260917-1">
-  <script src="data.js?v=20260917-1" defer></script>
-  <script src="game.js?v=20260917-1" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260918-1">
+  <script src="data.js?v=20260918-1" defer></script>
+  <script src="game.js?v=20260918-1" defer></script>
 </head>
 <body>
   <main class="app">
@@ -20,7 +20,7 @@
       <p class="title-subtitle">きょうは、どの部屋へ？</p>
       <p class="title-catchcopy">好きがつながる、やさしい居場所</p>
       <p class="muted title-note"><span id="debug-title-note" hidden>初期4部屋は本人検収済み会話を表示します。<br></span>朝と夜に部屋を訪問。昼の出来事を挟みながら、5日間で10回の部屋巡り。</p>
-      <p class="muted title-version">Ver.1.1（2026.09.17）　昼の出来事・追加会話・夜の案内図を追加</p>
+      <p class="muted title-version">Ver.1.2（2026.09.18）　キャラクター紹介カードを追加</p>
       <button id="start-button" class="primary">はじめる <span aria-hidden="true">→</span></button>
       <button id="title-memories-button" class="secondary memories-entry">思い出</button>
     </section>
@@ -36,7 +36,12 @@
       <button id="map-memories-button" class="memories-entry">思い出</button>
       <dl id="status" class="status" aria-label="現在の状況"></dl>
       <p class="status-note">朝と夜に訪問。昼は共通の出来事を読みます。5日間で計10回。</p>
-      <div class="map-art"><img id="map-image" alt="MioVerse案内図" hidden><div id="map-placeholder"><span class="map-symbol" aria-hidden="true">◇</span><strong>MioVerse案内図</strong><p><span id="debug-map-note" hidden>案内図画像を読み込めない場合の仮表示です。<br></span>下のボタンから部屋を選べます。</p></div></div>
+      <p class="map-profile-hint">案内図の部屋名を押すと、住人の紹介を見られます。</p>
+      <div class="map-art">
+        <img id="map-image" alt="MioVerse案内図" hidden>
+        <div id="map-profile-hotspots" aria-label="キャラクター紹介" hidden></div>
+        <div id="map-placeholder"><span class="map-symbol" aria-hidden="true">◇</span><strong>MioVerse案内図</strong><p><span id="debug-map-note" hidden>案内図画像を読み込めない場合の仮表示です。<br></span>下のボタンから部屋を選べます。</p></div>
+      </div>
       <h2>訪問できる部屋</h2>
       <div id="available-rooms" class="room-grid"></div>
       <h2>別館</h2>
@@ -144,6 +149,20 @@
       <div id="memory-body" class="ending-body"></div>
       <button id="memory-reading-back" class="primary">思い出へ戻る</button>
     </section>
+    <div id="character-modal" class="character-modal" hidden>
+      <div class="character-modal-backdrop" data-character-close>
+        <section class="character-card" role="dialog" aria-modal="true" aria-labelledby="character-name" aria-describedby="character-description">
+          <button id="character-close" class="character-close" type="button" aria-label="紹介カードを閉じる">×</button>
+          <div class="character-visual"><img id="character-image" alt=""></div>
+          <div class="character-copy">
+            <p id="character-room" class="eyebrow"></p>
+            <h2 id="character-name" tabindex="-1"></h2>
+            <p id="character-catch" class="character-catch"></p>
+            <div id="character-description" class="character-description"></div>
+          </div>
+        </section>
+      </div>
+    </div>
     <footer id="debug-footer" hidden>PROTOTYPE <span aria-hidden="true">/</span> 初期4部屋の本人検収済み会話を収録</footer>
   </main>
 </body>
