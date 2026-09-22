@@ -83,6 +83,16 @@
     art: "まだ入れない部屋です。解放後に紹介が読めます。",
     stage: "まだ入れない部屋です。幕の向こうは解放後のお楽しみです。"
   };
+  const endingIllustrations = {
+    partner: "ending-light-towa.jpg",
+    lounge: "ending-naka.jpg",
+    shelter: "ending-ritsu.jpg",
+    recovery: "ending-sil.jpg",
+    secretary: "ending-secretary-towa.jpg",
+    art: "ending-alto.jpg",
+    stage: "ending-kuroko.jpg",
+    aoi: "ending-aoi.jpg"
+  };
   const mapProfileAreas = {
     partner: { day: [40.5, 26.7, 19.5, 5.7], night: [39.8, 26.0, 19.3, 5.7] },
     secretary: { day: [7.7, 36.6, 24.2, 6.4], night: [9.4, 36.4, 21.0, 6.4] },
@@ -300,7 +310,7 @@
     }
   }
   // 鑑賞と通常クリアで同じ本文描画を使う。保存・解放判定はここでは行わない。
-  function renderEndingBody(ending, mode) {
+  function renderEndingBody(ending, mode, roomId) {
     const target = byId(mode === "memory" ? "memory-body" : "ending-body");
     target.replaceChildren();
     target.hidden = !ending;
@@ -311,6 +321,17 @@
       if (!["☀️", "💛", "🖤", "🧩", "📘", "🎨", "🎭", "🧪"].some((mark) => text.startsWith(mark))) paragraph.className = "muted";
       target.append(paragraph);
     });
+    const illustration = endingIllustrations[roomId];
+    if (illustration) {
+      const figure = document.createElement("figure");
+      figure.className = "ending-illustration";
+      const image = document.createElement("img");
+      image.src = illustration;
+      image.alt = `${ending.title}のエンディングイラスト`;
+      image.decoding = "async";
+      figure.append(image);
+      target.append(figure);
+    }
   }
   const memoryView = { origin: "map", scrollY: 0, selectedRoom: null };
   function endingIdFor(roomId) {
@@ -340,7 +361,7 @@
         memoryView.selectedRoom = room.id;
         byId("memory-reading-label").textContent = ending.number;
         byId("memory-reading-heading").textContent = ending.title;
-        renderEndingBody(ending, "memory");
+        renderEndingBody(ending, "memory", room.id);
         showScreen("memory-reading");
       });
       byId("memory-list").append(card);
@@ -374,7 +395,7 @@
     byId("finish-heading").textContent = ending ? ending.title : "5日間の訪問が終わりました";
     byId("finish-notice").textContent = "全10回の訪問を終えました。正式なエンディング本文は、まだ表示しません。";
     byId("finish-notice").hidden = !DEBUG_MODE || Boolean(ending);
-    renderEndingBody(ending, "clear");
+    renderEndingBody(ending, "clear", state.endingResult.roomId);
     byId("restart-button").textContent = nextUnlockEvent() === unlockId ? "中央広場へ"
       : nextUnlockEvent() === artUnlockId ? "アートラボへ"
       : nextUnlockEvent() === stageUnlockId ? "黒子の独壇場へ"
