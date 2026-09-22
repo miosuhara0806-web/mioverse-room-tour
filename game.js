@@ -497,7 +497,10 @@
   function renderMapImage() {
     const image = byId("map-image");
     const night = state.currentStatus.timeLabel === "夜" && data.map.nightImageSrc;
-    const source = night ? data.map.nightImageSrc : data.map.imageSrc;
+    const source = night ? data.map.nightImageSrc
+      : !save.unlockedRooms.includes("art") ? data.map.lockedImageSrc
+      : !save.unlockedRooms.includes("stage") ? data.map.middleImageSrc
+      : data.map.imageSrc;
     image.alt = night ? (data.map.nightAlt || data.map.alt) : data.map.alt;
     if (image._mioMapSource !== source) {
       image.hidden = true;

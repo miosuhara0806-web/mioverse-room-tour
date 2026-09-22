@@ -4,7 +4,9 @@
 // 部屋を追加する場合は一意の id を持つ要素を rooms に追加（8部屋まで拡張可能）。
 window.MIO_DATA = {
   map: {
-    imageSrc: "miovers-guide.png",
+    imageSrc: "miovers-guide-day.jpg",
+    lockedImageSrc: "miovers-guide-day-locked.jpg",
+    middleImageSrc: "miovers-guide-day-middle.jpg",
     nightImageSrc: "miovers-guide-night.jpg",
     alt: "花と緑に囲まれた7つの部屋を描いたMioVerse案内図。部屋の選択は画像下のボタンから行えます。",
     nightAlt: "月と灯りに照らされた7つの部屋を描いた夜のMioVerse案内図。部屋の選択は画像下のボタンから行えます。"
