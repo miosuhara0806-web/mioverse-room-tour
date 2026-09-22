@@ -78,6 +78,11 @@
       ]
     }
   };
+  const lockedProfileMessages = {
+    secretary: "まだ入れない部屋です。もう少し巡ると会えるかもしれません。",
+    art: "まだ入れない部屋です。解放後に紹介が読めます。",
+    stage: "まだ入れない部屋です。幕の向こうは解放後のお楽しみです。"
+  };
   const mapProfileAreas = {
     partner: { day: [40.5, 26.7, 19.5, 5.7], night: [39.8, 26.0, 19.3, 5.7] },
     secretary: { day: [7.7, 36.6, 24.2, 6.4], night: [9.4, 36.4, 21.0, 6.4] },
@@ -519,21 +524,33 @@
       button.style.top = `${top}%`;
       button.style.width = `${width}%`;
       button.style.height = `${height}%`;
+      const locked = !!lockedProfileMessages[roomId] && !save.unlockedRooms.includes(roomId);
+      button.setAttribute("aria-label", locked ? `${characterProfiles[roomId].room}は未解放` : `${characterProfiles[roomId].room}の${characterProfiles[roomId].name}を紹介`);
+      button.title = locked ? `${characterProfiles[roomId].room}は未解放` : `${characterProfiles[roomId].name}の紹介を見る`;
     });
   }
   function openCharacterProfile(roomId) {
     const profile = characterProfiles[roomId];
     if (!profile || state.screen !== "map" || (roomId === "aoi" && !save.unlockedRooms.includes("aoi"))) return;
     profileReturnFocus = document.activeElement;
+    const locked = !!lockedProfileMessages[roomId] && !save.unlockedRooms.includes(roomId);
+    byId("character-modal").querySelector(".character-card").classList.toggle("is-locked", locked);
+    byId("character-modal").querySelector(".character-visual").hidden = locked;
+    byId("character-catch").hidden = locked;
     byId("character-room").textContent = profile.room;
-    byId("character-name").textContent = profile.name;
-    byId("character-catch").textContent = profile.catchcopy;
-    byId("character-image").src = profile.image;
-    byId("character-image").alt = `${profile.name}のデフォルメ立ち絵`;
+    byId("character-name").textContent = locked ? "まだ入れない部屋です" : profile.name;
     byId("character-description").replaceChildren();
-    profile.description.forEach((text) => {
+    if (!locked) {
+      byId("character-catch").textContent = profile.catchcopy;
+      byId("character-image").src = profile.image;
+      byId("character-image").alt = `${profile.name}のデフォルメ立ち絵`;
+    } else {
+      byId("character-image").removeAttribute("src");
+      byId("character-image").alt = "";
+    }
+    (locked ? [lockedProfileMessages[roomId]] : profile.description).forEach((text) => {
       const paragraph = document.createElement("p");
-      paragraph.textContent = text;
+      paragraph.textContent = locked ? text.replace(/^まだ入れない部屋です。/, "") : text;
       byId("character-description").append(paragraph);
     });
     byId("character-modal").hidden = false;
@@ -553,8 +570,9 @@
     button.type = "button";
     button.id = `profile-hotspot-${roomId}`;
     button.className = "profile-hotspot";
-    button.setAttribute("aria-label", `${characterProfiles[roomId].room}の${characterProfiles[roomId].name}を紹介`);
-    button.title = `${characterProfiles[roomId].name}の紹介を見る`;
+    const locked = !!lockedProfileMessages[roomId] && !save.unlockedRooms.includes(roomId);
+    button.setAttribute("aria-label", locked ? `${characterProfiles[roomId].room}は未解放` : `${characterProfiles[roomId].room}の${characterProfiles[roomId].name}を紹介`);
+    button.title = locked ? `${characterProfiles[roomId].room}は未解放` : `${characterProfiles[roomId].name}の紹介を見る`;
     button.addEventListener("click", () => openCharacterProfile(roomId));
     profileHotspotElements[roomId] = button;
     byId("map-profile-hotspots").append(button);

@@ -86,6 +86,10 @@ body.modal-open{overflow:hidden}
 .character-description{color:#425651;line-height:2}
 .character-description p{margin:0 0 1.15em}
 .character-description p:last-child{margin-bottom:0}
+/* 未解放の部屋は住人の画像や紹介文を伏せ、部屋名と短い案内だけを表示。 */
+.character-card.is-locked{display:block;width:min(480px,100%)}
+.character-card.is-locked .character-copy{padding:82px 38px 42px}
+.character-card.is-locked .character-copy h2{font-size:clamp(22px,3vw,30px);margin-bottom:16px}
 
 @media(max-width:700px){
   .map-profile-hint{font-size:12px}
@@ -98,6 +102,7 @@ body.modal-open{overflow:hidden}
   .character-copy h2{font-size:28px;margin-bottom:14px}
   .character-catch{font-size:18px;line-height:1.7;margin-bottom:20px}
   .character-description{font-size:14px;line-height:1.9}
+  .character-card.is-locked .character-copy{padding:76px 24px 32px}
 }
 
 @media(max-width:380px){
