@@ -8,6 +8,8 @@ window.MIO_DATA = {
     lockedImageSrc: "miovers-guide-day-locked.jpg",
     middleImageSrc: "miovers-guide-day-middle.jpg",
     nightImageSrc: "miovers-guide-night.jpg",
+    nightLockedImageSrc: "miovers-guide-night-locked.jpg",
+    nightMiddleImageSrc: "miovers-guide-night-middle.jpg",
     alt: "花と緑に囲まれた7つの部屋を描いたMioVerse案内図。部屋の選択は画像下のボタンから行えます。",
     nightAlt: "月と灯りに照らされた7つの部屋を描いた夜のMioVerse案内図。部屋の選択は画像下のボタンから行えます。"
   },

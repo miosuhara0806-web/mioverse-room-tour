@@ -79,13 +79,13 @@
     }
   };
   const mapProfileAreas = {
-    partner: { day: [40.5, 26.7, 19.5, 5.7], night: [41.1, 25.5, 18.8, 5.7] },
-    secretary: { day: [7.7, 36.6, 24.2, 6.4], night: [6.7, 35.5, 26.0, 6.4] },
-    lounge: { day: [69.2, 36.4, 23.0, 6.4], night: [67.0, 35.8, 26.2, 6.4] },
-    shelter: { day: [7.5, 55.5, 25.0, 6.5], night: [5.7, 54.1, 29.2, 6.5] },
-    art: { day: [70.1, 56.7, 24.0, 6.5], night: [67.6, 54.7, 28.9, 6.5] },
-    recovery: { day: [13.0, 75.9, 28.5, 6.6], night: [12.2, 74.0, 31.5, 6.6] },
-    stage: { day: [60.4, 76.0, 28.2, 6.6], night: [57.4, 73.8, 31.3, 6.6] }
+    partner: { day: [40.5, 26.7, 19.5, 5.7], night: [39.8, 26.0, 19.3, 5.7] },
+    secretary: { day: [7.7, 36.6, 24.2, 6.4], night: [9.4, 36.4, 21.0, 6.4] },
+    lounge: { day: [69.2, 36.4, 23.0, 6.4], night: [68.3, 36.4, 20.4, 6.4] },
+    shelter: { day: [7.5, 55.5, 25.0, 6.5], night: [8.0, 55.0, 24.0, 6.5] },
+    art: { day: [70.1, 56.7, 24.0, 6.5], night: [69.5, 56.0, 21.5, 6.5] },
+    recovery: { day: [13.0, 75.9, 28.5, 6.6], night: [16.6, 74.5, 22.3, 6.6] },
+    stage: { day: [60.4, 76.0, 28.2, 6.6], night: [58.8, 74.5, 24.0, 6.6] }
   };
   const profileHotspotElements = {};
   let profileReturnFocus = null;
@@ -497,7 +497,10 @@
   function renderMapImage() {
     const image = byId("map-image");
     const night = state.currentStatus.timeLabel === "夜" && data.map.nightImageSrc;
-    const source = night ? data.map.nightImageSrc
+    const source = night
+      ? !save.unlockedRooms.includes("art") ? data.map.nightLockedImageSrc
+        : !save.unlockedRooms.includes("stage") ? data.map.nightMiddleImageSrc
+        : data.map.nightImageSrc
       : !save.unlockedRooms.includes("art") ? data.map.lockedImageSrc
       : !save.unlockedRooms.includes("stage") ? data.map.middleImageSrc
       : data.map.imageSrc;
